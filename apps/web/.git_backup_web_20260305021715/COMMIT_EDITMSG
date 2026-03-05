@@ -1,0 +1,29 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Changes to be committed:
+#	new file:   next.config.js
+#	modified:   next.config.ts
+#	modified:   package-lock.json
+#	modified:   package.json
+#	new file:   prisma/schema.prisma
+#	new file:   src/app/api/alerts/read/route.ts
+#	new file:   src/app/api/alerts/route.ts
+#	new file:   src/app/api/backlinks/route.ts
+#	new file:   src/app/api/backlinks/status/route.ts
+#	new file:   src/app/api/checks/by-backlink/route.ts
+#	new file:   src/app/api/checks/run-due/route.ts
+#	new file:   src/app/api/checks/run/route.ts
+#	new file:   src/app/api/projects/[id]/dashboard/route.ts
+#	new file:   src/app/api/projects/[id]/route.ts
+#	new file:   src/app/api/projects/insights/route.ts
+#	new file:   src/app/api/projects/overview/route.ts
+#	new file:   src/app/api/projects/route.ts
+#	new file:   src/app/api/projects/summary/route.ts
+#	modified:   src/app/page.tsx
+#	new file:   src/app/projects/[id]/page.tsx
+#	new file:   src/lib/checkEngine.ts
+#	new file:   src/lib/prisma.ts
+#	modified:   tsconfig.json

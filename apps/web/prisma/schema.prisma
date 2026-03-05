@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  AGENCY
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  LINKBUILDER
+}
+
+enum Priority {
+  CRITICAL // щодня
+  STANDARD // раз на 3 дні
+  LOW // раз на тиждень
+}
+
+enum BacklinkStatus {
+  ACTIVE
+  ISSUE
+  LOST
+  DELETED
+}
+
+enum IssueReason {
+  BLOCKED_OR_CAPTCHA
+  LINK_NOT_FOUND
+  HTTP_NOT_2XX
+  ANCHOR_MISMATCH
+  NOINDEX
+  CANONICAL_MISMATCH
+  OTHER
+}
+
+enum Currency {
+  EUR
+  USD
+  UAH
+}
+
+enum AlertType {
+  ACTIVE_TO_ISSUE
+  ISSUE_TO_LOST
+  TO_LOST
+}
+
+enum CheckJobStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+model Organization {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  plan           Plan     @default(FREE)
+  telegramChatId String?
+  createdAt      DateTime @default(now())
+
+  users    User[]
+  projects Project[]
+  billingEvents BillingEvent[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String   @unique
+  firstName      String?
+  lastName       String?
+  phone          String?
+  passwordHash   String
+  role           Role     @default(OWNER)
+  createdAt      DateTime @default(now())
+
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  assignedBacklinks Backlink[]   @relation("AssignedTo")
+  twoFactorCodes    LoginTwoFactorCode[]
+  billingEvents     BillingEvent[]
+}
+
+model BillingEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  actorUserId    String?
+  fromPlan       Plan
+  toPlan         Plan
+  mode           String   @default("manual")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorUser    User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model LoginTwoFactorCode {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  baseDomain     String?
+  createdAt      DateTime @default(now())
+
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  backlinks      Backlink[]
+  backlinkEvents BacklinkEvent[]
+}
+
+model Backlink {
+  id               String          @id @default(cuid())
+  projectId        String
+  sourceUrl        String
+  targetUrl        String
+  expectedAnchor   String?
+  vendorName       String?
+  assignedToUserId String?
+  events           BacklinkEvent[]
+
+  priority        Priority @default(STANDARD)
+  checkEveryHours Int      @default(72) // CRITICAL=24, STANDARD=72, LOW=168
+
+  cost          Decimal   @default(0.0)
+  currency      Currency  @default(EUR)
+  placementDate DateTime?
+
+  status        BacklinkStatus @default(ACTIVE)
+  lostAt        DateTime?
+  deletedAt     DateTime?
+  lastCheckedAt DateTime?
+  nextCheckAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  project    Project @relation(fields: [projectId], references: [id])
+  assignedTo User?   @relation("AssignedTo", fields: [assignedToUserId], references: [id])
+
+  checks Check[]
+  alerts Alert[]
+  checkJobs CheckJob[]
+
+  @@index([projectId, status])
+  @@index([deletedAt])
+  @@index([nextCheckAt])
+}
+
+model Check {
+  id             String   @id @default(cuid())
+  backlinkId     String
+  checkedAt      DateTime @default(now())
+  httpStatus     Int?
+  linkFound      Boolean  @default(false)
+  anchorDetected String?
+  relDetected    String?
+  isNoindex      Boolean  @default(false)
+  canonicalUrl   String?
+  rawHtmlHash    String?
+
+  // ✅ V4 fields:
+  anchorOk    Boolean?
+  issueReason IssueReason?
+
+  backlink Backlink @relation(fields: [backlinkId], references: [id], onDelete: Cascade)
+
+  @@index([backlinkId, checkedAt])
+}
+
+model Alert {
+  id             String    @id @default(cuid())
+  backlinkId     String
+  type           AlertType
+  triggeredAt    DateTime  @default(now())
+  resolvedAt     DateTime?
+  lastNotifiedAt DateTime?
+  readAt         DateTime? // ← НОВЕ
+
+  backlink Backlink @relation(fields: [backlinkId], references: [id])
+
+  @@index([backlinkId, type, resolvedAt])
+  @@index([readAt])
+}
+
+model BacklinkEvent {
+  id         String @id @default(cuid())
+  projectId  String
+  backlinkId String
+
+  type      String // або enum, якщо ти зробив enum
+  createdAt DateTime @default(now())
+
+  backlink Backlink @relation(fields: [backlinkId], references: [id], onDelete: Cascade)
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([backlinkId, createdAt])
+}
+
+model CheckJob {
+  id          String         @id @default(cuid())
+  backlinkId  String
+  status      CheckJobStatus @default(PENDING)
+  attempts    Int            @default(0)
+  maxAttempts Int            @default(3)
+  notBefore   DateTime       @default(now())
+  leaseUntil  DateTime?
+  workerId    String?
+  lastError   String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  backlink Backlink @relation(fields: [backlinkId], references: [id], onDelete: Cascade)
+
+  @@index([status, notBefore])
+  @@index([leaseUntil])
+  @@index([backlinkId, createdAt])
+}

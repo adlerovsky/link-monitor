@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            apps/web/package-lock.json
+            packages/db/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run prisma:generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: API smoke (auth/session)
+        run: |
+          npm run dev -- --hostname 127.0.0.1 --port 3100 > /tmp/next-dev.log 2>&1 &
+          DEV_PID=$!
+          for i in {1..30}; do
+            if curl -sSf http://127.0.0.1:3100/login > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          STATUS=$(curl -s -o /tmp/auth-session.json -w "%{http_code}" http://127.0.0.1:3100/api/auth/session)
+          cat /tmp/auth-session.json
+          if [ "$STATUS" != "401" ]; then
+            echo "Expected 401 from /api/auth/session, got $STATUS"
+            kill $DEV_PID
+            exit 1
+          fi
+          kill $DEV_PID
+
+      - name: Audit (prod deps)
+        continue-on-error: true
+        run: npm audit --omit=dev

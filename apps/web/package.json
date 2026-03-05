@@ -1,0 +1,37 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "preflight": "node scripts/preflight.mjs",
+    "preflight:worker": "node scripts/preflight.mjs --with-worker",
+    "test:integration": "node scripts/integration-auth-queue.mjs",
+    "qa:launch": "node scripts/qa-launch-flow.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "db": "file:../../packages/db",
+    "next": "16.1.6",
+    "prisma": "^6.19.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "25.3.0",
+    "@types/react": "19.2.14",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
+    "typescript": "5.9.3"
+  }
+}

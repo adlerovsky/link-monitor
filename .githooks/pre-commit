@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -e
+
+echo "[pre-commit] lint"
+npm --prefix apps/web run lint
+
+echo "[pre-commit] typecheck"
+npm --prefix apps/web run typecheck

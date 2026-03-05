@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+set -e
+
+echo "[pre-push] lint"
+npm --prefix apps/web run lint
+
+echo "[pre-push] typecheck"
+npm --prefix apps/web run typecheck
+
+if [ "$SKIP_PREPUSH_BUILD" = "1" ]; then
+  echo "[pre-push] build skipped (SKIP_PREPUSH_BUILD=1)"
+else
+  echo "[pre-push] build"
+  npm --prefix apps/web run build
+fi
+
+if [ "$RUN_PREPUSH_SMOKE" = "1" ]; then
+  echo "[pre-push] api smoke (/api/auth/session => 401)"
+
+  SMOKE_BASE_URL=""
+  DEV_PID=""
+
+  if curl -sSf http://127.0.0.1:3000/login >/dev/null 2>&1; then
+    SMOKE_BASE_URL="http://127.0.0.1:3000"
+  elif curl -sSf http://127.0.0.1:3001/login >/dev/null 2>&1; then
+    SMOKE_BASE_URL="http://127.0.0.1:3001"
+  else
+    rm -f /Users/adler/link-monitor/apps/web/.next/dev/lock || true
+    npm --prefix apps/web run dev -- --hostname 127.0.0.1 --port 3101 > /tmp/prepush-next-dev.log 2>&1 &
+    DEV_PID=$!
+    SMOKE_BASE_URL="http://127.0.0.1:3101"
+
+    cleanup() {
+      if [ -n "$DEV_PID" ]; then
+        kill "$DEV_PID" >/dev/null 2>&1 || true
+      fi
+    }
+    trap cleanup EXIT INT TERM
+
+    i=0
+    while [ "$i" -lt 40 ]; do
+      if curl -sSf "$SMOKE_BASE_URL/login" >/dev/null 2>&1; then
+        break
+      fi
+      i=$((i + 1))
+      sleep 1
+    done
+
+    if [ "$i" -ge 40 ]; then
+      echo "[pre-push] smoke startup failed"
+      tail -n 80 /tmp/prepush-next-dev.log || true
+      exit 1
+    fi
+  fi
+
+  STATUS=$(curl -s -o /tmp/prepush-auth-session.json -w "%{http_code}" "$SMOKE_BASE_URL/api/auth/session")
+  cat /tmp/prepush-auth-session.json
+
+  if [ "$STATUS" != "401" ]; then
+    echo "[pre-push] expected 401 from /api/auth/session, got $STATUS"
+    exit 1
+  fi
+
+  if [ -n "$DEV_PID" ]; then
+    cleanup
+    trap - EXIT INT TERM
+  fi
+fi

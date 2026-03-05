@@ -1,0 +1,139 @@
+.page {
+  max-width: var(--layout-max-narrow);
+  margin: 0 auto;
+  padding: var(--layout-page-pad-top) var(--layout-gutter) var(--layout-page-pad-bottom);
+  display: grid;
+  gap: 18px;
+}
+
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 24px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.heroTitle {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.heroSubtitle {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 0 12px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.navBtn:hover {
+  border-color: var(--text-soft);
+  background: var(--surface-muted);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 20px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cardHeader h2 {
+  font-size: 18px;
+}
+
+.cardHeader span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.profileForm {
+  display: grid;
+  gap: 10px;
+}
+
+.formRowTwo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.input {
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding: 0 12px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hint,
+.feedback {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.primaryBtn {
+  min-height: var(--control-height-sm);
+  padding: 0 14px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.primaryBtn:hover {
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 28px var(--layout-gutter-mobile) 54px;
+  }
+
+  .hero {
+    padding: 14px;
+  }
+
+  .formRowTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryBtn,
+  .navBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
