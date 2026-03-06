@@ -1,0 +1,9 @@
+{
+  "name": "link-monitor-web-wrapper",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cd ../apps/web && npm run prisma:generate && npm run build",
+    "start": "cd ../apps/web && npm start"
+  }
+}
