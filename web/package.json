@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "build": "cd ../apps/web && npm run prisma:generate && npm run build",
+    "prisma:generate": "cd ../apps/web && npm run prisma:generate",
+    "build": "cd ../apps/web && npm run build",
     "start": "cd ../apps/web && npm start"
   }
 }
