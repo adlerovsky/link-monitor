@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["cd apps/web && npm install"]
+
+[phases.build]
+cmds = ["cd apps/web && npm run prisma:generate && npm run build"]
+
+[start]
+cmd = "cd apps/web && npm start"
