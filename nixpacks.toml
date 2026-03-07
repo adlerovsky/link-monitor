@@ -8,4 +8,4 @@ cmds = ["if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then echo 'worker install: sk
 cmds = ["if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then echo 'worker build: skipped'; else cd apps/web && npm run prisma:generate && npm run build; fi"]
 
 [start]
-cmd = "if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then node worker/run-due-worker.mjs; else cd apps/web && npm start; fi"
+cmd = "if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then node worker/run-due-worker.mjs; else cd apps/web && npx prisma migrate deploy --schema prisma/schema.prisma && npm start; fi"
