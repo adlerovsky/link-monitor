@@ -14,7 +14,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://linkmonitor.app";
+function resolveAppUrl() {
+  const raw = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
+  if (!raw) return "https://linkmonitor.app";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
+}
+
+const appUrl = resolveAppUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
