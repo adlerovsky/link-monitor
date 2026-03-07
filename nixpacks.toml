@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
-cmds = ["cd apps/web && npm install"]
+cmds = ["if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then echo 'worker install: skipped'; else cd apps/web && npm install; fi"]
 
 [phases.build]
-cmds = ["cd apps/web && npm run prisma:generate && npm run build"]
+cmds = ["if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then echo 'worker build: skipped'; else cd apps/web && npm run prisma:generate && npm run build; fi"]
 
 [start]
-cmd = "cd apps/web && npm start"
+cmd = "if [ \"$LM_SERVICE_ROLE\" = \"worker\" ]; then node worker/run-due-worker.mjs; else cd apps/web && npm start; fi"
